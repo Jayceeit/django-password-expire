@@ -58,7 +58,7 @@ def change_password_handler(sender, instance, **kwargs):
 
 
 def login_handler(sender, request, user, **kwargs):
-    # Prevents login if password expired
+    # Redirects to password change screen if password expired
     checker = PasswordChecker(request.user)
     if checker.is_expired():
         if hasattr(settings, 'PASSWORD_EXPIRE_CONTACT'):
@@ -66,7 +66,11 @@ def login_handler(sender, request, user, **kwargs):
         else:
             contact = "your administrator"
         messages.error(request, f"Password expired. Contact {contact}.")
-        logout(request)
+
+        if hasattr(settings, 'PASSWORD_EXPIRE_FORCE') and settings.PASSWORD_EXPIRE_FORCE:
+            request.redirect_to_password_change = True
+        else:
+            logout(request)
 
 
 def register_signals():

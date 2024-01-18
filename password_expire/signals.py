@@ -69,7 +69,7 @@ def login_handler(sender, request, user, **kwargs):
 
         if hasattr(settings, 'PASSWORD_EXPIRE_FORCE') and settings.PASSWORD_EXPIRE_FORCE:
             request.redirect_to_password_change = True
-        else:
+            request.password_change_username = user.username
             logout(request)
 
 

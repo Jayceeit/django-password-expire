@@ -67,10 +67,9 @@ def login_handler(sender, request, user, **kwargs):
             contact = "your administrator"
         messages.error(request, f"Password expired. Contact {contact}.")
 
-        if hasattr(settings, 'PASSWORD_EXPIRE_FORCE') and settings.PASSWORD_EXPIRE_FORCE:
-            request.redirect_to_password_change = True
-            request.password_change_username = user.username
-            logout(request)
+        request.redirect_to_password_change = True
+        request.password_change_username = user.username
+        logout(request)
 
 
 def register_signals():

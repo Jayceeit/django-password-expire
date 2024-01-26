@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import resolve
@@ -31,7 +32,7 @@ class PasswordExpireMiddleware:
 
         # picks up flag for forcing password change
         if getattr(request, 'redirect_to_password_change', False):
-            return redirect('password_change')
+            return redirect(settings.PASSWORD_CHANGE_REDIRECT_URL, username=request.password_change_username)
 
         return response
 

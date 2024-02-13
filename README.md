@@ -35,5 +35,12 @@ If you want to exclude superusers from the password expiration, set this flag:
 PASSWORD_EXPIRE_EXCLUDE_SUPERUSERS = True
 ```
 
+You can customize the URL destinations redirected to upon password expiration for
+regular users as well as moderators:
+```python
+PASSWORD_EXPIRE_RESET_REDIRECT_URL = 'accounts:expired_password_reset_request'
+PASSWORD_EXPIRE_CHANGE_REDIRECT_URL = 'accounts:expired_password_change'
+```
+
 ## Acknowledgements
 This app is inspired by [django-password-policies-iplweb](https://github.com/iplweb/django-password-policies-iplweb).

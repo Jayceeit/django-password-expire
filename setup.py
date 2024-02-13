@@ -5,13 +5,13 @@ with open("README.md") as fp:
 
 setuptools.setup(
     name="django-password-expire",
-    version="0.2",
+    version="3.0",
     description="Django app for forcing password expiration",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/cash/django-password-expire",
-    author="Cash Costello",
-    author_email="cash.costello@gmail.com",
+    url="https://github.com/jayceeit/django-password-expire",
+    author="JC Consulting",
+    author_email="itadmin@jvcwaters.com",
     license="BSD",
     packages=setuptools.find_packages(),
     include_package_data=True,

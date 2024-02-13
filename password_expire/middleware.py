@@ -32,7 +32,12 @@ class PasswordExpireMiddleware:
 
         # picks up flag for forcing password change
         if getattr(request, 'redirect_to_password_change', False):
-            return redirect(settings.PASSWORD_EXPIRE_REDIRECT_URL, username=request.password_change_username)
+            if request.expired_user.has_elevated_privileges():
+                url = settings.PASSWORD_EXPIRE_CHANGE_REDIRECT_URL
+            else:
+                url = settings.PASSWORD_EXPIRE_RESET_REDIRECT_URL
+
+            return redirect(url, username=request.expired_user.get_username())
 
         return response
 

@@ -44,16 +44,20 @@ class PasswordChecker:
             return None
 
     def get_last_changed(self):
-        # if no record, fallback to when user created
+        """
+        if no record, return now()
+        """
         try:
-            record = PasswordChange.objects.get(user=self.user)
+            record = PasswordChange.objects.get(user=self.user) # pylint:disable=no-member
             last_changed = record.last_changed
-        except PasswordChange.DoesNotExist:
-            last_changed = self.user.date_joined
+        except PasswordChange.DoesNotExist: # pylint:disable=no-member
+            last_changed = timezone.now()
         return last_changed
 
     def is_user_excluded(self):
-        # admin can configure so superusers are excluded from check
+        """
+        admin can configure so superusers are excluded from check
+        """
         if hasattr(settings, 'PASSWORD_EXPIRE_EXCLUDE_SUPERUSERS') and\
                 settings.PASSWORD_EXPIRE_EXCLUDE_SUPERUSERS:
             return self.user.is_superuser

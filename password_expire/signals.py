@@ -15,43 +15,27 @@ def force_password_change_for_new_users(sender, instance, created, **kwargs): # 
     when the user is created, set password change flag
     """
     if created:
-        original_pk = instance.pk
-        for website, _ in settings.WEBSITE_CHOICES:
-            if website == settings.CURRENT_WEBSITE:
-                continue
+        queryset = ForcePasswordChange.objects # pylint:disable=no-member
+        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+            queryset.using(kwargs['using'])
 
-            db_alias = settings.WEBSITE_DATABASES[website]
-            try:
-                user = UserModel.objects.using(db_alias).get(uuid=instance.uuid)
-            except UserModel.DoesNotExist:
-                continue
-            else:
-                instance.pk = user.pk
-                ForcePasswordChange.objects.using(db_alias).create(user=instance)
-
-        instance._state.db = DEFAULT_DB_ALIAS # pylint:disable=protected-access
-        instance.pk = original_pk
+        queryset.create(user=instance)
 
 
 def redirect_to_change_password(sender, request, user, **kwargs): # pylint:disable=unused-argument
     """
     redirect if force password change is set
     """
-    for website, _ in settings.WEBSITE_CHOICES:
-        if website == settings.CURRENT_WEBSITE:
-            continue
-
-        db_alias = settings.WEBSITE_DATABASES[website]
-        try:
-            record = ForcePasswordChange.objects.using(db_alias).get(user=user)
-        except ForcePasswordChange.DoesNotExist:
-            continue
-
-    if record:
-        messages.error(request, f"Your password has expired and must be changed.")
+    try:
+        queryset = ForcePasswordChange.objects # pylint:disable=no-member
+        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+            queryset = queryset.using(kwargs['using'])
+        queryset.get(user=user)
+        messages.error(request, "Your password has expired and must be changed.")
         # set flag for middleware to pick up
         request.redirect_to_password_change = True
-        print('set')
+    except ForcePasswordChange.DoesNotExist: # pylint:disable=no-member
+        pass
 
 
 def remove_force_password_record(sender, instance, **kwargs): # pylint:disable=unused-argument
@@ -59,18 +43,18 @@ def remove_force_password_record(sender, instance, **kwargs): # pylint:disable=u
     user changing password so remove force change record
     contrib/auth/base_user.py sets _password in set_password()
     """
-    if instance._password is None:
+    if instance._password is None: # pylint:disable=protected-access
         return
 
-    for website, _ in settings.WEBSITE_CHOICES:
-        if website == settings.CURRENT_WEBSITE:
-            continue
-
-        db_alias = settings.WEBSITE_DATABASES[website]
-        try:
-            ForcePasswordChange.objects.using(db_alias).filter(user=instance).delete()
-        except ForcePasswordChange.DoesNotExist:
-            continue
+    # pylint:disable=no-member
+    try:
+        queryset = ForcePasswordChange.objects
+        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+            queryset = queryset.using(kwargs['using'])
+        queryset.filter(user=instance).delete()
+    except ForcePasswordChange.DoesNotExist:
+        pass
+    # pylint:enable=no-member
 
 
 def create_user_handler(sender, instance, created, **kwargs): # pylint:disable=unused-argument
@@ -78,15 +62,10 @@ def create_user_handler(sender, instance, created, **kwargs): # pylint:disable=u
     when the user is created, set the password last changed field to now
     """
     if created:
-        now = timezone.now()
-        for website, _ in settings.WEBSITE_CHOICES:
-            db_alias = settings.WEBSITE_DATABASES[website]
-            try:
-                user = UserModel.objects.using(db_alias).get(id=instance.id)
-            except UserModel.DoesNotExist:
-                continue
-            else:
-                PasswordChange.objects.using(db_alias).create(user=instance, last_changed=now)
+        queryset = PasswordChange.objects # pylint:disable=no-member
+        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+            queryset = queryset.using(kwargs['using'])
+        queryset.create(user=instance, last_changed=timezone.now()) # pylint:disable=no-member
 
 
 def change_password_handler(sender, instance, **kwargs): # pylint:disable=unused-argument
@@ -94,23 +73,25 @@ def change_password_handler(sender, instance, **kwargs): # pylint:disable=unused
     Checks if the user changed password
     contrib/auth/base_user.py sets _password in set_password()
     """
-    if instance._password is None:
+    print("change_password_handler called")
+    if instance._password is None: # pylint:disable=protected-access
         return
 
-    now = timezone.now()
-    for website, _ in settings.WEBSITE_CHOICES:
-        if website == settings.CURRENT_WEBSITE:
-            continue
+    try:
+        queryset = UserModel.objects
+        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+            queryset = queryset.using(kwargs['using'])
+        queryset.get(uuid=instance.uuid)
+    except UserModel.DoesNotExist:
+        return
 
-        db_alias = settings.WEBSITE_DATABASES[website]
-        try:
-            UserModel.objects.using(db_alias).get(id=instance.id)
-        except UserModel.DoesNotExist:
-            continue
+    queryset = PasswordChange.objects # pylint:disable=no-member
+    if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+        queryset = queryset.using(kwargs['using'])
 
-        record, _ign = PasswordChange.objects.using(db_alias).get_or_create(user=instance)
-        record.last_changed = now
-        record.save()
+    record, _ign = queryset.get_or_create(user=instance)
+    record.last_changed = timezone.now()
+    record.save()
 
 
 def login_handler(sender, request, user, **kwargs): # pylint:disable=unused-argument

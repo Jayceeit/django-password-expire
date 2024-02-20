@@ -73,7 +73,6 @@ def change_password_handler(sender, instance, **kwargs): # pylint:disable=unused
     Checks if the user changed password
     contrib/auth/base_user.py sets _password in set_password()
     """
-    print("change_password_handler called")
     if instance._password is None: # pylint:disable=protected-access
         return
 

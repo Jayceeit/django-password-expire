@@ -28,12 +28,14 @@ def redirect_to_change_password(sender, request, user, **kwargs): # pylint:disab
     """
     try:
         queryset = ForcePasswordChange.objects # pylint:disable=no-member
-        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+        using = kwargs.get('using', DEFAULT_DB_ALIAS)
+        if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.get(user=user)
         messages.error(request, "Your password has expired and must be changed.")
         # set flag for middleware to pick up
         request.redirect_to_password_change = True
+        request.expired_user = request.user
     except ForcePasswordChange.DoesNotExist: # pylint:disable=no-member
         pass
 
@@ -49,7 +51,8 @@ def remove_force_password_record(sender, instance, **kwargs): # pylint:disable=u
     # pylint:disable=no-member
     try:
         queryset = ForcePasswordChange.objects
-        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+        using = kwargs.get('using', DEFAULT_DB_ALIAS)
+        if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.filter(user=instance).delete()
     except ForcePasswordChange.DoesNotExist:
@@ -63,7 +66,8 @@ def create_user_handler(sender, instance, created, **kwargs): # pylint:disable=u
     """
     if created:
         queryset = PasswordChange.objects # pylint:disable=no-member
-        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+        using = kwargs.get('using', DEFAULT_DB_ALIAS)
+        if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.create(user=instance, last_changed=timezone.now()) # pylint:disable=no-member
 
@@ -73,20 +77,21 @@ def change_password_handler(sender, instance, **kwargs): # pylint:disable=unused
     Checks if the user changed password
     contrib/auth/base_user.py sets _password in set_password()
     """
-    print("change_password_handler called")
     if instance._password is None: # pylint:disable=protected-access
         return
 
     try:
         queryset = UserModel.objects
-        if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+        using = kwargs.get('using', DEFAULT_DB_ALIAS)
+        if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.get(uuid=instance.uuid)
     except UserModel.DoesNotExist:
         return
 
     queryset = PasswordChange.objects # pylint:disable=no-member
-    if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
+    using = kwargs.get('using', DEFAULT_DB_ALIAS)
+    if using and using != DEFAULT_DB_ALIAS:
         queryset = queryset.using(kwargs['using'])
 
     record, _ign = queryset.get_or_create(user=instance)
@@ -124,10 +129,10 @@ def register_signals():
             dispatch_uid="password_expire:force_password_change_for_new_users",
         )
 
-        user_logged_in.connect(
-            redirect_to_change_password,
-            dispatch_uid="password_expire:redirect_to_change_password"
-        )
+    user_logged_in.connect(
+        redirect_to_change_password,
+        dispatch_uid="password_expire:redirect_to_change_password"
+    )
 
     signals.pre_save.connect(
         remove_force_password_record,

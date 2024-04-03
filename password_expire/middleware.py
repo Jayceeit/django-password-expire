@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import resolve
 
@@ -37,6 +38,7 @@ class PasswordExpireMiddleware:
             else:
                 url = settings.PASSWORD_EXPIRE_RESET_REDIRECT_URL
 
+            logout(request) # ensure user is not logged in despite being flagged
             return redirect(url, username=request.expired_user.get_username())
 
         return response

@@ -1,3 +1,4 @@
+# pylint:disable=missing-module-docstring
 import os
 import sys
 
@@ -6,7 +7,7 @@ from django.conf import settings
 from django.test.utils import get_runner
 
 
-def runtests(*test_args):
+def runtests(*_test_args): # pylint:disable=missing-function-docstring
     os.environ['DJANGO_SETTINGS_MODULE'] = 'password_expire.tests.settings'
     django.setup()
     test_runner = get_runner(settings)()

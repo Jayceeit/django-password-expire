@@ -1,6 +1,7 @@
+# pylint:disable=missing-module-docstring
 import setuptools
 
-with open("README.md") as fp:
+with open("README.md") as fp: # pylint:disable=unspecified-encoding
     long_description = fp.read()
 
 setuptools.setup(

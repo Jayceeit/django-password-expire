@@ -1,3 +1,4 @@
+# pylint:disable=missing-module-docstring
 DEBUG = False
 LANGUAGES = (("en", "English"),)
 LANGUAGE_CODE = "en"

@@ -1,3 +1,4 @@
+# pylint:disable=missing-module-docstring
 from datetime import timedelta
 
 from django.conf import settings
@@ -9,7 +10,7 @@ from password_expire.model import PasswordChange
 from password_expire.util import PasswordChecker
 
 
-def create_user(date_joined):
+def create_user(date_joined): # pylint:disable=missing-function-docstring
     user = get_user_model()(
         username="bob",
         email="bob@example.org",
@@ -21,7 +22,8 @@ def create_user(date_joined):
     return user
 
 
-class PasswordCheckerTests(TestCase):
+# pylint:disable=missing-function-docstring,line-too-long
+class PasswordCheckerTests(TestCase): # pylint:disable=missing-class-docstring
     def test_expire_with_time_to_go_using_password_change_model(self):
         user = create_user(timezone.now())
         checker = PasswordChecker(user)
@@ -75,3 +77,4 @@ class PasswordCheckerTests(TestCase):
         checker = PasswordChecker(user)
         self.assertTrue(checker.is_warning())
         self.assertFalse(checker.is_expired())
+# pylint:enable=missing-function-docstring,line-too-long

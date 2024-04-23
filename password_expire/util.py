@@ -1,3 +1,4 @@
+# pylint:disable=missing-module-docstring
 from datetime import timedelta
 
 from django.conf import settings
@@ -22,12 +23,12 @@ class PasswordChecker:
         self.expiration = self.last_changed + self.password_allowed_duration
         self.warning = self.expiration - self.password_warning_duration
 
-    def is_expired(self):
+    def is_expired(self): # pylint:disable=missing-function-docstring
         if self.is_user_excluded():
             return False
         return timezone.now() > self.expiration
 
-    def is_warning(self):
+    def is_warning(self): # pylint:disable=missing-function-docstring
         if self.is_user_excluded():
             return False
         return timezone.now() > self.warning
@@ -40,8 +41,8 @@ class PasswordChecker:
         if self.is_warning():
             time_left = self.expiration - timezone.now()
             return humanize.naturaldelta(time_left)
-        else:
-            return None
+
+        return None
 
     def get_last_changed(self):
         """

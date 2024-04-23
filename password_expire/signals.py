@@ -1,3 +1,4 @@
+# pylint:disable=missing-module-docstring
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, logout, user_logged_in
@@ -15,7 +16,7 @@ def force_password_change_for_new_users(sender, instance, created, **kwargs): # 
     when the user is created, set password change flag
     """
     if created:
-        queryset = ForcePasswordChange.objects # pylint:disable=no-member
+        queryset = ForcePasswordChange.objects
         if kwargs['using'] and kwargs['using'] != DEFAULT_DB_ALIAS:
             queryset.using(kwargs['using'])
 
@@ -27,7 +28,7 @@ def redirect_to_change_password(sender, request, user, **kwargs): # pylint:disab
     redirect if force password change is set
     """
     try:
-        queryset = ForcePasswordChange.objects # pylint:disable=no-member
+        queryset = ForcePasswordChange.objects
         using = kwargs.get('using', DEFAULT_DB_ALIAS)
         if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
@@ -48,16 +49,14 @@ def remove_force_password_record(sender, instance, **kwargs): # pylint:disable=u
     if instance._password is None: # pylint:disable=protected-access
         return
 
-    # pylint:disable=no-member
     try:
         queryset = ForcePasswordChange.objects
         using = kwargs.get('using', DEFAULT_DB_ALIAS)
         if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.filter(user=instance).delete()
-    except ForcePasswordChange.DoesNotExist:
+    except ForcePasswordChange.DoesNotExist: # pylint:disable=no-member
         pass
-    # pylint:enable=no-member
 
 
 def create_user_handler(sender, instance, created, **kwargs): # pylint:disable=unused-argument
@@ -104,14 +103,16 @@ def login_handler(sender, request, user, **kwargs): # pylint:disable=unused-argu
     Redirects to password change screen if password expired
     """
     checker = PasswordChecker(request.user)
-    if checker.is_expired():
+    if checker.is_expired() or (timezone.now() > request.user.forced_password_expiration):
         if hasattr(settings, 'PASSWORD_EXPIRE_CONTACT'):
             contact = settings.PASSWORD_EXPIRE_CONTACT
         else:
             contact = "your administrator"
 
+        # pylint:disable=line-too-long
         link = f'<a href="mailto:{settings.DEFAULT_FROM_EMAIL}?subject=Password Expiration Help" class="alert-link">{contact}</a>'
         messages.error(request, f"If you need assistance, please contact {link}.", extra_tags='safe')
+        # pylint:enable=line-too-long
 
         request.redirect_to_password_change = True
         request.expired_user = request.user

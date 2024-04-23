@@ -1,2 +1,2 @@
-# pylint:disable=missing-module-docstring
-DEFAULT_APP_CONFIG = 'password_expire.apps.PasswordExpireConfig'
+# pylint:disable=missing-module-docstring,invalid-name
+default_app_config = 'password_expire.apps.PasswordExpireConfig'

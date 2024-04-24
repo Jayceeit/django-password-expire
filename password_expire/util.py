@@ -8,10 +8,10 @@ import humanize
 from .model import PasswordChange
 
 
-def user_has_been_forced(user):
+def change_forced_by_admin(user):
     """
-    Checks for the presence of a forced password expiration date
-    being in the past relative to now.
+    Checks for the presence of a forced password expiration date, set by admin;
+    true if date is in the past relative to now.
     """
     if not user.forced_password_expiration:
         return False

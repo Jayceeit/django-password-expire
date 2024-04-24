@@ -7,7 +7,7 @@ from django.db.models import signals
 from django.utils import timezone
 
 from .model import ForcePasswordChange, PasswordChange
-from .util import PasswordChecker, user_has_been_forced
+from .util import PasswordChecker, change_forced_by_admin
 
 UserModel = get_user_model()
 
@@ -116,7 +116,7 @@ def login_handler(sender, request, user, **kwargs): # pylint:disable=unused-argu
     Redirects to password change screen if password expired
     """
     checker = PasswordChecker(request.user)
-    if checker.is_expired() or user_has_been_forced(request.user):
+    if checker.is_expired() or change_forced_by_admin(request.user):
         if hasattr(settings, 'PASSWORD_EXPIRE_CONTACT'):
             contact = settings.PASSWORD_EXPIRE_CONTACT
         else:

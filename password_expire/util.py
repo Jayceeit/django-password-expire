@@ -8,6 +8,16 @@ import humanize
 from .model import PasswordChange
 
 
+def user_has_been_forced(user):
+    """
+    Checks for the presence of a forced password expiration date
+    being in the past relative to now.
+    """
+    if not user.forced_password_expiration:
+        return False
+
+    return timezone.now() > user.forced_password_expiration
+
 class PasswordChecker:
     """
     Checks if password has expired or if it will expire soon

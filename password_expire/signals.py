@@ -7,7 +7,7 @@ from django.db.models import signals
 from django.utils import timezone
 
 from .model import ForcePasswordChange, PasswordChange
-from .util import PasswordChecker
+from .util import PasswordChecker, user_has_been_forced
 
 UserModel = get_user_model()
 
@@ -27,13 +27,22 @@ def redirect_to_change_password(sender, request, user, **kwargs): # pylint:disab
     """
     redirect if force password change is set
     """
+    if hasattr(settings, 'PASSWORD_EXPIRE_CONTACT'):
+        contact = settings.PASSWORD_EXPIRE_CONTACT
+    else:
+        contact = "your administrator"
+
     try:
         queryset = ForcePasswordChange.objects
         using = kwargs.get('using', DEFAULT_DB_ALIAS)
         if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.get(user=user)
+        # pylint:disable=line-too-long
+        link = f'<a href="mailto:{settings.DEFAULT_FROM_EMAIL}?subject=Password Expiration Help" class="alert-link">{contact}</a>'
         messages.error(request, "Your password has expired and must be changed.")
+        messages.error(request, f"If you need assistance, please contact {link}.", extra_tags='safe')
+        # pylint:enable=line-too-long
         # set flag for middleware to pick up
         request.redirect_to_password_change = True
         request.expired_user = request.user
@@ -55,6 +64,10 @@ def remove_force_password_record(sender, instance, **kwargs): # pylint:disable=u
         if using and using != DEFAULT_DB_ALIAS:
             queryset = queryset.using(kwargs['using'])
         queryset.filter(user=instance).delete()
+
+        if instance.forced_password_expiration:
+            instance.forced_password_expiration = None
+            instance.save()
     except ForcePasswordChange.DoesNotExist: # pylint:disable=no-member
         pass
 
@@ -103,7 +116,7 @@ def login_handler(sender, request, user, **kwargs): # pylint:disable=unused-argu
     Redirects to password change screen if password expired
     """
     checker = PasswordChecker(request.user)
-    if checker.is_expired() or (timezone.now() > request.user.forced_password_expiration):
+    if checker.is_expired() or user_has_been_forced(request.user):
         if hasattr(settings, 'PASSWORD_EXPIRE_CONTACT'):
             contact = settings.PASSWORD_EXPIRE_CONTACT
         else:

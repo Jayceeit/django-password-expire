@@ -5,7 +5,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import resolve
 
-from .util import PasswordChecker
+from .util import PasswordChecker, user_has_been_forced
 
 
 class PasswordExpireMiddleware:
@@ -21,7 +21,7 @@ class PasswordExpireMiddleware:
             # add warning if within the notification window for password expiration
             if request.user.is_authenticated:
                 checker = PasswordChecker(request.user)
-                if checker.is_expired():
+                if checker.is_expired() or user_has_been_forced(request.user): # pylint:disable=line-too-long
                     msg = 'Please change your password. It has expired.'
                     self.add_warning(request, msg)
                 else:

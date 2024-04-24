@@ -6,7 +6,7 @@ with open("README.md") as fp: # pylint:disable=unspecified-encoding
 
 setuptools.setup(
     name="django-password-expire",
-    version="4.1.0",
+    version="4.2.1",
     description="Django app for forcing password expiration",
     long_description=long_description,
     long_description_content_type="text/markdown",

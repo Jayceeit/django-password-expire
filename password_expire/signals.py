@@ -111,6 +111,7 @@ def login_handler(sender, request, user, **kwargs): # pylint:disable=unused-argu
 
         # pylint:disable=line-too-long
         link = f'<a href="mailto:{settings.DEFAULT_FROM_EMAIL}?subject=Password Expiration Help" class="alert-link">{contact}</a>'
+        messages.error(request, "Your password has expired and must be changed.")
         messages.error(request, f"If you need assistance, please contact {link}.", extra_tags='safe')
         # pylint:enable=line-too-long
 

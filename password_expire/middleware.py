@@ -1,10 +1,11 @@
+# pylint:disable=missing-module-docstring
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import resolve
 
-from .util import PasswordChecker
+from .util import PasswordChecker, change_forced_by_admin
 
 
 class PasswordExpireMiddleware:
@@ -20,8 +21,8 @@ class PasswordExpireMiddleware:
             # add warning if within the notification window for password expiration
             if request.user.is_authenticated:
                 checker = PasswordChecker(request.user)
-                if checker.is_expired():
-                    msg = f'Please change your password. It has expired.'
+                if checker.is_expired() or change_forced_by_admin(request.user): # pylint:disable=line-too-long
+                    msg = 'Please change your password. It has expired.'
                     self.add_warning(request, msg)
                 else:
                     time_to_expire_string = checker.get_expire_time()
@@ -33,7 +34,7 @@ class PasswordExpireMiddleware:
 
         # picks up flag for forcing password change
         if getattr(request, 'redirect_to_password_change', False):
-            if request.expired_user.has_elevated_privileges():
+            if request.expired_user.has_elevated_privileges() or request.expired_user.has_perm('users.change_password'): # pylint:disable=line-too-long
                 url = settings.PASSWORD_EXPIRE_CHANGE_REDIRECT_URL
             else:
                 url = settings.PASSWORD_EXPIRE_RESET_REDIRECT_URL
@@ -55,6 +56,9 @@ class PasswordExpireMiddleware:
         return False
 
     def add_warning(self, request, text):
+        """
+        Provide a warning to users whose password is about to expire
+        """
         storage = messages.get_messages(request)
         for message in storage:
             # only add this message once

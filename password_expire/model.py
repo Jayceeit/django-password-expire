@@ -1,9 +1,13 @@
+# pylint:disable=missing-module-docstring
 from django.conf import settings
 from django.db import models
 
 
 class PasswordChange(models.Model):
-    # record when users change a password to support an expiration policy
+    """
+    record when users change a password to support an expiration policy
+    """
+    objects = models.Manager()
     last_changed = models.DateTimeField(
         db_index=True,
         auto_now_add=True,
@@ -15,7 +19,10 @@ class PasswordChange(models.Model):
 
 
 class ForcePasswordChange(models.Model):
-    # does this user have to change their password
+    """
+    does this user have to change their password
+    """
+    objects = models.Manager()
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

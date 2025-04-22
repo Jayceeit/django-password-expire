@@ -144,10 +144,10 @@ def register_signals():
             dispatch_uid="password_expire:force_password_change_for_new_users",
         )
 
-    user_logged_in.connect(
-        redirect_to_change_password,
-        dispatch_uid="password_expire:redirect_to_change_password"
-    )
+    # user_logged_in.connect(
+    #     redirect_to_change_password,
+    #     dispatch_uid="password_expire:redirect_to_change_password"
+    # )
 
     signals.pre_save.connect(
         remove_force_password_record,
@@ -167,7 +167,7 @@ def register_signals():
         dispatch_uid="password_expire:change_password_handler",
     )
 
-    user_logged_in.connect(
-        login_handler,
-        dispatch_uid="password_expire:login_handler"
-    )
+    # user_logged_in.connect(
+    #     login_handler,
+    #     dispatch_uid="password_expire:login_handler"
+    # )
